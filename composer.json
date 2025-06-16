@@ -1,0 +1,65 @@
+{
+    "name": "schlessera/markdown-escape",
+    "version": "0.1.0",
+    "description": "A PHP library for escaping content to be safely embedded in Markdown without breaking rendering",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alain Schlesser",
+            "email": "alain.schlesser@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2"
+    },
+    "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "mikey179/vfsstream": "^1.6",
+        "phpcompatibility/php-compatibility": "^9.0",
+        "phpstan/phpstan": "^1.0",
+        "phpstan/phpstan-strict-rules": "^1.0",
+        "phpunit/php-code-coverage": "^7.0 || ^9.0",
+        "phpunit/phpunit": "^8.5 || ^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Markdown\\Escape\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Markdown\\Escape\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite Unit",
+        "test:integration": "phpunit --testsuite Integration",
+        "test:performance": "phpunit --group performance",
+        "test:coverage": "phpunit --coverage-html coverage/html --coverage-text",
+        "test:coverage:clover": "phpunit --coverage-clover coverage/clover.xml",
+        "coverage:badge": "@php bin/coverage-badge.php",
+        "cs": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+        "cs-fix": "php-cs-fixer fix --allow-risky=yes",
+        "phpstan": "phpstan analyse",
+        "phpcompat": "phpcs -p src tests --standard=PHPCompatibility --runtime-set testVersion 7.2-",
+        "check": [
+            "@cs",
+            "@phpstan",
+            "@phpcompat",
+            "@test"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

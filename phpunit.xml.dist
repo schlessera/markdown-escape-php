@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         verbose="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         stopOnFailure="false"
+         executionOrder="random"
+         resolveDependencies="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+
+    <groups>
+        <exclude>
+            <group>performance</group>
+        </exclude>
+    </groups>
+
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+        <exclude>
+            <directory>src/Exception</directory>
+        </exclude>
+        <report>
+            <html outputDirectory="coverage/html" lowUpperBound="50" highLowerBound="90"/>
+            <text outputFile="coverage/coverage.txt" showOnlySummary="false"/>
+            <clover outputFile="coverage/clover.xml"/>
+            <cobertura outputFile="coverage/cobertura.xml"/>
+            <crap4j outputFile="coverage/crap4j.xml" threshold="30"/>
+            <xml outputDirectory="coverage/xml"/>
+        </report>
+    </coverage>
+
+    <logging>
+        <junit outputFile="coverage/junit.xml"/>
+        <teamcity outputFile="coverage/teamcity.txt"/>
+        <testdoxHtml outputFile="coverage/testdox.html"/>
+        <testdoxText outputFile="coverage/testdox.txt"/>
+    </logging>
+</phpunit>
