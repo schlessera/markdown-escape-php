@@ -94,6 +94,46 @@ class UrlEscaperTest extends TestCase
         $this->assertStringContainsString('user:pass@example.com', $escaped);
     }
 
+    public function testEscapeUrlWithPort(): void
+    {
+        $url     = 'https://example.com:8080/path';
+        $escaped = $this->escaper->escape($url);
+
+        $this->assertStringContainsString(':8080', $escaped);
+        $this->assertEquals('https://example.com:8080/path', $escaped);
+    }
+
+    public function testEscapeUrlWithUserButNoPassword(): void
+    {
+        $url     = 'https://user@example.com/secure';
+        $escaped = $this->escaper->escape($url);
+
+        $this->assertStringContainsString('user@example.com', $escaped);
+    }
+
+    public function testEscapeComplexQueryString(): void
+    {
+        $url     = 'https://example.com/search?arr[]=1&arr[]=2&special=<>&test=value';
+        $escaped = $this->escaper->escape($url);
+
+        // Check that the query string is properly encoded
+        $this->assertStringContainsString('?', $escaped);
+        // http_build_query adds indices to arrays
+        $this->assertStringContainsString('arr%5B0%5D=1', $escaped);
+        $this->assertStringContainsString('arr%5B1%5D=2', $escaped);
+        $this->assertStringContainsString('special=%3C%3E', $escaped);
+    }
+
+    public function testEscapeUrlWithMalformedParsing(): void
+    {
+        // Test a URL that might cause parse_url to fail
+        $url     = '///invalid-url';
+        $escaped = $this->escaper->escape($url);
+
+        // When parse_url fails, the original URL should be returned
+        $this->assertEquals($url, $escaped);
+    }
+
     public function testEscapeNonUrlWithUnicodeEncoding(): void
     {
         $context = new UrlContext(['encode_unicode' => true]);
@@ -109,14 +149,6 @@ class UrlEscaperTest extends TestCase
         $this->assertStringNotContainsString('naïve', $escaped);
         $this->assertStringContainsString('caf%C3%A9', $escaped);
         $this->assertStringContainsString('na%C3%AFve', $escaped);
-    }
-
-    public function testEscapeUrlWithPort(): void
-    {
-        $url     = 'https://example.com:8080/path';
-        $escaped = $this->escaper->escape($url);
-
-        $this->assertEquals('https://example.com:8080/path', $escaped);
     }
 
     public function testEscapeUrlWithPortAndAuthentication(): void

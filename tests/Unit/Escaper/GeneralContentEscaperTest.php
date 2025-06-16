@@ -110,4 +110,101 @@ MD;
         $this->assertStringContainsString('\\*NoSpace', $escaped);
         $this->assertStringContainsString('1.NoSpace', $escaped); // Dot is not escaped (no space after)
     }
+
+    public function testEscapeExclamationBeforeBracket(): void
+    {
+        $content = 'This is an image ![alt text](image.jpg) and not !this';
+        $escaped = $this->escaper->escape($content);
+
+        // ! should be escaped when followed by [
+        $this->assertStringContainsString('\\!\\[alt text\\]', $escaped);
+        // ! should NOT be escaped when not followed by [
+        $this->assertStringContainsString('and not !this', $escaped);
+    }
+
+    public function testEscapeBackslashes(): void
+    {
+        $content = 'Path\\to\\file and escape \\ character';
+        $escaped = $this->escaper->escape($content);
+
+        // Backslashes should be doubled
+        $this->assertStringContainsString('Path\\\\to\\\\file', $escaped);
+        $this->assertStringContainsString('escape \\\\ character', $escaped);
+    }
+
+    public function testEscapeBackslashAtEndOfLine(): void
+    {
+        $content = 'Line ends with backslash\\';
+        $escaped = $this->escaper->escape($content);
+
+        // Backslash at end should be doubled
+        $this->assertEquals('Line ends with backslash\\\\', $escaped);
+    }
+
+    public function testEscapeGfmSpecialCharacters(): void
+    {
+        // Use GFM dialect which has additional special characters
+        $context = new GeneralContentContext();
+        $dialect = new \Markdown\Escape\Dialect\GitHubFlavoredMarkdownDialect();
+        $escaper = new GeneralContentEscaper($context, $dialect);
+
+        $content = 'Mention @user, emoji :smile:, strikethrough ~text~';
+        $escaped = $escaper->escape($content);
+
+        // In GFM, these should be escaped
+        $this->assertStringContainsString('\\@user', $escaped);
+        $this->assertStringContainsString('\\:smile\\:', $escaped);
+        $this->assertStringContainsString('\\~text\\~', $escaped);
+    }
+
+    public function testEscapeHashInCustomDialect(): void
+    {
+        // Create a mock custom dialect
+        $customDialect = new class ('custom') extends \Markdown\Escape\Dialect\AbstractDialect {
+            protected function configure(): void
+            {
+                $this->features          = [];
+                $this->characterMappings = [];
+            }
+
+            protected function getDefaultSpecialCharacters(): array
+            {
+                return ['#', '*', '_'];
+            }
+
+            protected function getDefaultCharacterMappings(): array
+            {
+                return [
+                    '#' => '\\#',
+                    '*' => '\\*',
+                    '_' => '\\_',
+                ];
+            }
+
+            public function getEscapeRules(\Markdown\Escape\Contract\ContextInterface $context): array
+            {
+                return [];
+            }
+        };
+
+        $context = new GeneralContentContext();
+        $escaper = new GeneralContentEscaper($context, $customDialect);
+
+        $content = 'This # should be escaped in custom dialect';
+        $escaped = $escaper->escape($content);
+
+        // # should be escaped in custom dialects (not just at line start)
+        $this->assertStringContainsString('This \\# should be escaped', $escaped);
+    }
+
+    public function testEscapeOtherSpecialCharacters(): void
+    {
+        $content = 'Parentheses (text), brackets {text}, pipes |text|, plus +text';
+        $escaped = $this->escaper->escape($content);
+
+        $this->assertStringContainsString('\\(text\\)', $escaped);
+        $this->assertStringContainsString('\\{text\\}', $escaped);
+        $this->assertStringContainsString('\\|text\\|', $escaped);
+        $this->assertStringContainsString('\\+text', $escaped);
+    }
 }

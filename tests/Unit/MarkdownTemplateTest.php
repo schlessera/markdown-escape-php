@@ -250,6 +250,76 @@ MD;
         $this->assertSame('Custom: Hello', $result);
     }
 
+    public function testAddPathWhenNoFileLoaderExists(): void
+    {
+        // Create a template with only ArrayTemplateLoader (no FileTemplateLoader)
+        $template = new MarkdownTemplate();
+
+        // First, let's add some default templates to ensure we have a ChainTemplateLoader
+        $template->addDefaultTemplates(['test' => 'test']);
+
+        // Now remove the FileTemplateLoader if it exists
+        $renderer = $template->getRenderer();
+        $loader   = $renderer->getLoader();
+        if ($loader instanceof \Markdown\Escape\Template\Loader\ChainTemplateLoader) {
+            $loaders = [];
+            foreach ($loader->getLoaders() as $l) {
+                if (!($l instanceof \Markdown\Escape\Template\Loader\FileTemplateLoader)) {
+                    $loaders[] = $l;
+                }
+            }
+            // Create new ChainTemplateLoader with only non-FileTemplateLoader loaders
+            $newLoader   = new \Markdown\Escape\Template\Loader\ChainTemplateLoader($loaders);
+            $engine      = new \Markdown\Escape\Template\Engine\PhpTemplateEngine();
+            $newRenderer = new \Markdown\Escape\Template\TemplateRenderer($newLoader, $engine, $template->getMarkdownEscape());
+
+            // Use reflection to set the new renderer
+            $reflection = new \ReflectionClass($template);
+            $property   = $reflection->getProperty('renderer');
+            $property->setAccessible(true);
+            $property->setValue($template, $newRenderer);
+        }
+
+        // Create a test file
+        vfsStream::newFile('new-loader-test.php')
+            ->at($this->root)
+            ->setContent('New loader: <?= $text ?>');
+
+        // Now add path - this should create a new FileTemplateLoader
+        $template->addPath($this->rootPath);
+
+        $result = $template->render('new-loader-test', ['text' => 'Success']);
+        $this->assertSame('New loader: Success', $result);
+    }
+
+    public function testAddPathWithFileTemplateLoaderDirectly(): void
+    {
+        // Create a template with only FileTemplateLoader (not ChainTemplateLoader)
+        $fileLoader     = new \Markdown\Escape\Template\Loader\FileTemplateLoader();
+        $engine         = new \Markdown\Escape\Template\Engine\PhpTemplateEngine();
+        $markdownEscape = new MarkdownEscape();
+        $renderer       = new \Markdown\Escape\Template\TemplateRenderer($fileLoader, $engine, $markdownEscape);
+
+        $template = new MarkdownTemplate();
+
+        // Use reflection to set the renderer
+        $reflection = new \ReflectionClass($template);
+        $property   = $reflection->getProperty('renderer');
+        $property->setAccessible(true);
+        $property->setValue($template, $renderer);
+
+        // Create a test file
+        vfsStream::newFile('direct-loader.php')
+            ->at($this->root)
+            ->setContent('Direct loader: <?= $text ?>');
+
+        // Add path - this should use the FileTemplateLoader directly
+        $template->addPath($this->rootPath);
+
+        $result = $template->render('direct-loader', ['text' => 'Works']);
+        $this->assertSame('Direct loader: Works', $result);
+    }
+
     public function testAddPathWithNamespace(): void
     {
         $namespaceDir = vfsStream::newDirectory('namespace');
@@ -277,6 +347,66 @@ MD;
         $result = $template->render('greeting', ['name' => 'World']);
 
         $this->assertSame('Hello, World!', $result);
+    }
+
+    public function testAddDefaultTemplatesWhenNoArrayLoaderExists(): void
+    {
+        // Create a template and manipulate it to have only FileTemplateLoader
+        $template = new MarkdownTemplate();
+
+        $renderer = $template->getRenderer();
+        $loader   = $renderer->getLoader();
+        if ($loader instanceof \Markdown\Escape\Template\Loader\ChainTemplateLoader) {
+            $loaders = [];
+            foreach ($loader->getLoaders() as $l) {
+                if (!($l instanceof \Markdown\Escape\Template\Loader\ArrayTemplateLoader)) {
+                    $loaders[] = $l;
+                }
+            }
+            // Create new ChainTemplateLoader with only non-ArrayTemplateLoader loaders
+            $newLoader   = new \Markdown\Escape\Template\Loader\ChainTemplateLoader($loaders);
+            $engine      = new \Markdown\Escape\Template\Engine\PhpTemplateEngine();
+            $newRenderer = new \Markdown\Escape\Template\TemplateRenderer($newLoader, $engine, $template->getMarkdownEscape());
+
+            // Use reflection to set the new renderer
+            $reflection = new \ReflectionClass($template);
+            $property   = $reflection->getProperty('renderer');
+            $property->setAccessible(true);
+            $property->setValue($template, $newRenderer);
+        }
+
+        // Now add default templates - this should create a new ArrayTemplateLoader
+        $template->addDefaultTemplates([
+            'new-array-loader' => 'Created new loader: <?= $name ?>',
+        ]);
+
+        $result = $template->render('new-array-loader', ['name' => 'Test']);
+        $this->assertSame('Created new loader: Test', $result);
+    }
+
+    public function testAddDefaultTemplatesWithArrayTemplateLoaderDirectly(): void
+    {
+        // Create a template with only ArrayTemplateLoader (not ChainTemplateLoader)
+        $arrayLoader    = new \Markdown\Escape\Template\Loader\ArrayTemplateLoader();
+        $engine         = new \Markdown\Escape\Template\Engine\PhpTemplateEngine();
+        $markdownEscape = new MarkdownEscape();
+        $renderer       = new \Markdown\Escape\Template\TemplateRenderer($arrayLoader, $engine, $markdownEscape);
+
+        $template = new MarkdownTemplate();
+
+        // Use reflection to set the renderer
+        $reflection = new \ReflectionClass($template);
+        $property   = $reflection->getProperty('renderer');
+        $property->setAccessible(true);
+        $property->setValue($template, $renderer);
+
+        // Add default templates - this should use the ArrayTemplateLoader directly
+        $template->addDefaultTemplates([
+            'direct-array' => 'Direct array loader: <?= $value ?>',
+        ]);
+
+        $result = $template->render('direct-array', ['value' => 'Success']);
+        $this->assertSame('Direct array loader: Success', $result);
     }
 
     public function testConfigure(): void

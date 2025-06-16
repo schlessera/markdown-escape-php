@@ -281,4 +281,43 @@ class FileTemplateLoaderTest extends TestCase
 
         $this->assertSame([], $loader->getTemplateNames());
     }
+
+    public function testGetAllSearchPaths(): void
+    {
+        // Create extra directory
+        vfsStream::newDirectory('extra')->at($this->root);
+
+        // Test getAllSearchPaths through the exception message
+        $loader = new FileTemplateLoader();
+        $loader->addPath('ns1', $this->rootPath . '/default');
+        $loader->addPath('ns2', [
+            $this->rootPath . '/custom',
+            $this->rootPath . '/extra',
+        ]);
+
+        try {
+            $loader->load('nonexistent');
+            $this->fail('Expected TemplateNotFoundException');
+        } catch (TemplateNotFoundException $e) {
+            $searchPaths = $e->getSearchPaths();
+            $this->assertContains($this->rootPath . '/default', $searchPaths);
+            $this->assertContains($this->rootPath . '/custom', $searchPaths);
+            $this->assertContains($this->rootPath . '/extra', $searchPaths);
+            $this->assertCount(3, array_unique($searchPaths));
+        }
+    }
+
+    public function testGetTemplateNamesWithInvalidDirectory(): void
+    {
+        $loader = new FileTemplateLoader([
+            'valid'   => $this->rootPath . '/default',
+            'invalid' => $this->rootPath . '/nonexistent',
+        ]);
+
+        $names = $loader->getTemplateNames();
+
+        // Should still return templates from valid directory
+        $this->assertContains('valid/hello', $names);
+        $this->assertContains('valid/nested/template', $names);
+    }
 }

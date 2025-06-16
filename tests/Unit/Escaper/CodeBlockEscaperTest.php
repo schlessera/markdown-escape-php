@@ -107,4 +107,97 @@ class CodeBlockEscaperTest extends TestCase
 
         $this->assertStringContainsString("no newline at end\n```", $escaped);
     }
+
+    public function testEscapeWithRawOption(): void
+    {
+        $context = new CodeBlockContext(['raw' => true]);
+        $dialect = new CommonMarkDialect();
+        $escaper = new CodeBlockEscaper($context, $dialect);
+
+        $code    = "function test() {\n    return true;\n}";
+        $escaped = $escaper->escape($code);
+
+        // Raw mode returns content as-is
+        $this->assertEquals($code, $escaped);
+    }
+
+    public function testEscapeWithWithinOption(): void
+    {
+        $context = new CodeBlockContext(['within' => true]);
+        $dialect = new CommonMarkDialect();
+        $escaper = new CodeBlockEscaper($context, $dialect);
+
+        $code    = "function test() {\n    return true;\n}";
+        $escaped = $escaper->escape($code);
+
+        // Within mode returns content as-is (no escaping needed within code blocks)
+        $this->assertEquals($code, $escaped);
+    }
+
+    public function testEscapeWithComplexFencePatterns(): void
+    {
+        $context = new CodeBlockContext(['use_fences' => true]);
+        $dialect = new CommonMarkDialect();
+        $escaper = new CodeBlockEscaper($context, $dialect);
+
+        // Test with many consecutive backticks
+        $code    = 'code with ````` five backticks';
+        $escaped = $escaper->escape($code);
+
+        // Should use tildes since there are no tildes in the content
+        $this->assertStringStartsWith('~~~', $escaped);
+        $this->assertStringEndsWith('~~~', $escaped);
+    }
+
+    public function testEscapeWithMixedFenceCharacters(): void
+    {
+        $context = new CodeBlockContext(['use_fences' => true]);
+        $dialect = new CommonMarkDialect();
+        $escaper = new CodeBlockEscaper($context, $dialect);
+
+        // Test with more tildes than backticks
+        $code    = 'code with ` one backtick and ~~~~ four tildes';
+        $escaped = $escaper->escape($code);
+
+        // Should use backticks since there are fewer of them
+        $this->assertStringStartsWith('``', $escaped);
+        $this->assertStringEndsWith('``', $escaped);
+    }
+
+    public function testEscapeIndentedCodeBlockWithEmptyLines(): void
+    {
+        $code    = "first line\n\nsecond line\n\n";
+        $escaped = $this->escaper->escape($code);
+
+        $expected = "    first line\n\n    second line\n\n";
+        $this->assertEquals($expected, $escaped);
+    }
+
+    public function testEscapeWithRawAndFencesOptions(): void
+    {
+        // Test that raw option takes precedence over use_fences
+        $context = new CodeBlockContext(['raw' => true, 'use_fences' => true]);
+        $dialect = new CommonMarkDialect();
+        $escaper = new CodeBlockEscaper($context, $dialect);
+
+        $code    = "function test() {\n    return true;\n}";
+        $escaped = $escaper->escape($code);
+
+        // Raw mode should take precedence
+        $this->assertEquals($code, $escaped);
+    }
+
+    public function testEscapeWithWithinAndFencesOptions(): void
+    {
+        // Test that within option takes precedence over use_fences
+        $context = new CodeBlockContext(['within' => true, 'use_fences' => true]);
+        $dialect = new CommonMarkDialect();
+        $escaper = new CodeBlockEscaper($context, $dialect);
+
+        $code    = "function test() {\n    return true;\n}";
+        $escaped = $escaper->escape($code);
+
+        // Within mode should take precedence
+        $this->assertEquals($code, $escaped);
+    }
 }
