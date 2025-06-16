@@ -1,4 +1,4 @@
-# Markdown Escape PHP
+# Markdown Escape PHP [⚠️ WIP ⚠️]
 
 [![Tests](https://github.com/schlessera/markdown-escape-php/workflows/Tests/badge.svg)](https://github.com/schlessera/markdown-escape-php/actions)
 [![Code Coverage](https://codecov.io/gh/schlessera/markdown-escape-php/branch/main/graph/badge.svg)](https://codecov.io/gh/schlessera/markdown-escape-php)
