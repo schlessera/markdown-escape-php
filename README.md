@@ -1,7 +1,7 @@
 # Markdown Escape PHP [⚠️ WIP ⚠️]
 
 [![Tests](https://github.com/schlessera/markdown-escape-php/workflows/Tests/badge.svg)](https://github.com/schlessera/markdown-escape-php/actions)
-[![Code Coverage](https://codecov.io/gh/schlessera/markdown-escape-php/branch/main/graph/badge.svg)](https://codecov.io/gh/schlessera/markdown-escape-php)
+[![Code Coverage](https://codecov.io/gh/schlessera/markdown-escape-php/graph/badge.svg?token=A9JB5LMQXY)](https://codecov.io/gh/schlessera/markdown-escape-php)
 [![Latest Stable Version](https://poser.pugx.org/schlessera/markdown-escape/v/stable)](https://packagist.org/packages/schlessera/markdown-escape)
 [![License](https://poser.pugx.org/schlessera/markdown-escape/license)](https://packagist.org/packages/schlessera/markdown-escape)
 
